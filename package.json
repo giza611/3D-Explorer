@@ -1,0 +1,25 @@
+{
+  "name": "3d-worlds-app",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@thatopen/components": "^3.2.2",
+    "@thatopen/components-front": "^3.2.1",
+    "@thatopen/ui": "^3.2.0",
+    "stats.js": "^0.17.0",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
