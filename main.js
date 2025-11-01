@@ -402,6 +402,10 @@ async function initApp() {
                 console.log('Shadows toggled:', target.checked);
                 console.log('Attempting to set shadows...');
 
+                // Log config properties to find shadows
+                console.log('Scene config properties:', Object.keys(world.scene.config || {}));
+                console.log('Scene config object:', world.scene.config);
+
                 // Try different possible shadow property locations
                 if (world.scene.shadowsEnabled !== undefined) {
                   world.scene.shadowsEnabled = target.checked;
@@ -409,6 +413,9 @@ async function initApp() {
                 } else if (world.scene.config && world.scene.config.shadowsEnabled !== undefined) {
                   world.scene.config.shadowsEnabled = target.checked;
                   console.log('Set world.scene.config.shadowsEnabled');
+                } else if (world.scene.config && world.scene.config.shadows !== undefined) {
+                  world.scene.config.shadows = target.checked;
+                  console.log('Set world.scene.config.shadows');
                 } else if (world.renderer && world.renderer.shadowMap) {
                   world.renderer.shadowMap.enabled = target.checked;
                   console.log('Set world.renderer.shadowMap.enabled');
@@ -417,7 +424,7 @@ async function initApp() {
                 }
 
                 console.log('Scene shadowsEnabled value:', world.scene.shadowsEnabled);
-                console.log('Scene properties:', Object.keys(world.scene || {}));
+                console.log('Scene config shadows value:', world.scene.config.shadowsEnabled || world.scene.config.shadows);
               }}">
             </bim-checkbox>
           </bim-panel-section>
