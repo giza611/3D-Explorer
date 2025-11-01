@@ -395,6 +395,14 @@ async function initApp() {
                 world.scene.config.ambientLight.intensity = target.value;
               }}">
             </bim-number-input>
+
+            <bim-checkbox
+              label="Enable Shadows"
+              @change="${({ target }) => {
+                console.log('Shadows toggled:', target.checked);
+                world.scene.shadowsEnabled = target.checked;
+              }}">
+            </bim-checkbox>
           </bim-panel-section>
         </bim-panel>`;
     });
