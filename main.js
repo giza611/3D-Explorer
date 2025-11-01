@@ -14,6 +14,7 @@ import { VisibilityManager } from './visibility-manager.js';
 import { GridsManager } from './grids-manager.js';
 import { HighlighterManager } from './highlighter-manager.js';
 import { ItemsDataManager } from './items-data-manager.js';
+import { ViewCubeManager } from './view-cube-manager.js';
 
 console.log('Starting 3D Worlds App...');
 
@@ -199,6 +200,12 @@ async function initApp() {
     const itemsDataManager = new ItemsDataManager(components, world);
     const itemsDataManagerReady = itemsDataManager.init(highlighter);
     console.log('Items Data Manager ready:', itemsDataManagerReady);
+
+    // Initialize ViewCube Manager
+    console.log('Initializing ViewCube Manager...');
+    const viewCubeManager = new ViewCubeManager(components, world, cameraControls);
+    const viewCubeManagerReady = viewCubeManager.init();
+    console.log('ViewCube Manager ready:', viewCubeManagerReady);
 
     // Initialize UI
     console.log('Initializing UI...');
@@ -418,6 +425,27 @@ async function initApp() {
     console.log('Panel created, appending to body...');
     document.body.append(panel);
     console.log('Panel appended');
+
+    // Append ViewCube to body
+    if (viewCubeManagerReady && viewCubeManager.getViewCubeElement()) {
+      try {
+        const viewCubeElement = viewCubeManager.getViewCubeElement();
+        document.body.append(viewCubeElement);
+
+        // Style the ViewCube for positioning in bottom-left corner
+        viewCubeElement.style.cssText = `
+          position: fixed;
+          bottom: 20px;
+          left: 20px;
+          width: 120px;
+          height: 120px;
+          z-index: 100;
+        `;
+        console.log('ViewCube appended to body with positioning');
+      } catch (error) {
+        console.warn('Could not append ViewCube to body:', error);
+      }
+    }
 
     // Setup Theme Toggle
     const setupThemeToggle = () => {
