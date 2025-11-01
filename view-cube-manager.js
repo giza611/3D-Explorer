@@ -14,12 +14,8 @@ export class ViewCubeManager {
     console.log('Initializing ViewCube...');
 
     try {
-      // Create the ViewCube element
-      this.viewCube = BUI.Component.create(() => {
-        return BUI.html`
-          <bim-view-cube></bim-view-cube>
-        `;
-      });
+      // Create the ViewCube element directly using createElement
+      this.viewCube = document.createElement('bim-view-cube');
 
       if (!this.viewCube) {
         console.warn('Could not create ViewCube element');
@@ -28,6 +24,7 @@ export class ViewCubeManager {
 
       // Set camera reference
       this.viewCube.camera = this.world.camera.three;
+      console.log('ViewCube camera set');
 
       // Setup event listeners for ViewCube face clicks
       this.setupViewCubeEvents();

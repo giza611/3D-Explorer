@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import Stats from 'stats.js';
 import * as BUI from '@thatopen/ui';
 import * as OBC from '@thatopen/components';
+import * as CUI from '@thatopen/ui-obc';
 import { AreaMeasurementManager } from './area-measurement.js';
 import { LengthMeasurementManager } from './length-measurement.js';
 import { IfcLoaderManager } from './ifc-loader.js';
@@ -201,20 +202,22 @@ async function initApp() {
     const itemsDataManagerReady = itemsDataManager.init(highlighter);
     console.log('Items Data Manager ready:', itemsDataManagerReady);
 
-    // Initialize ViewCube Manager
-    console.log('Initializing ViewCube Manager...');
-    const viewCubeManager = new ViewCubeManager(components, world, cameraControls);
-    const viewCubeManagerReady = viewCubeManager.init();
-    console.log('ViewCube Manager ready:', viewCubeManagerReady);
-
-    // Initialize UI
+    // Initialize UI (must be done before ViewCubeManager)
     console.log('Initializing UI...');
     try {
       BUI.Manager.init();
       console.log('BUI Manager initialized');
+      CUI.Manager.init();
+      console.log('CUI Manager initialized');
     } catch (e) {
-      console.warn('Could not initialize BUI Manager:', e);
+      console.warn('Could not initialize BUI/CUI Manager:', e);
     }
+
+    // Initialize ViewCube Manager (after UI managers are initialized)
+    console.log('Initializing ViewCube Manager...');
+    const viewCubeManager = new ViewCubeManager(components, world, cameraControls);
+    const viewCubeManagerReady = viewCubeManager.init();
+    console.log('ViewCube Manager ready:', viewCubeManagerReady);
 
     console.log('Creating panel component...');
     const panel = BUI.Component.create(() => {
