@@ -35,11 +35,25 @@ async function initApp() {
     world.camera = new OBC.OrthoPerspectiveCamera(components);
     console.log('Scene (ShadowedScene), Renderer, OrthoPerspectiveCamera created');
 
+    // Debug: Log ShadowedScene properties
+    console.log('ShadowedScene properties:', Object.keys(world.scene || {}));
+    console.log('ShadowedScene object:', world.scene);
+
     components.init();
     console.log('Components initialized');
 
     world.scene.setup();
     console.log('Scene setup complete');
+
+    // Debug: Check shadowsEnabled after setup
+    console.log('shadowsEnabled available:', world.scene.shadowsEnabled !== undefined);
+    console.log('shadowsEnabled value:', world.scene.shadowsEnabled);
+
+    // Try to enable shadows by default
+    if (world.scene.shadowsEnabled !== undefined) {
+      world.scene.shadowsEnabled = true;
+      console.log('Shadows enabled by default');
+    }
 
     world.scene.three.background = null;
 
@@ -399,13 +413,24 @@ async function initApp() {
             <bim-checkbox
               label="Enable Shadows"
               @change="${({ target }) => {
-                console.log('Shadows toggled:', target.checked);
+                console.log('=== Shadows Toggle ===');
+                console.log('Checkbox changed to:', target.checked);
+                console.log('Scene type:', world.scene.constructor.name);
+                console.log('shadowsEnabled property exists:', world.scene.shadowsEnabled !== undefined);
+                console.log('Current shadowsEnabled value before:', world.scene.shadowsEnabled);
+
                 // ShadowedScene has shadowsEnabled property
                 if (world.scene.shadowsEnabled !== undefined) {
                   world.scene.shadowsEnabled = target.checked;
+                  console.log('Set shadowsEnabled to:', target.checked);
+                  console.log('Current shadowsEnabled value after:', world.scene.shadowsEnabled);
                   console.log('Shadows:', target.checked ? 'enabled' : 'disabled');
+
+                  // Log scene config to understand shadow state
+                  console.log('Scene config:', world.scene.config);
                 } else {
                   console.warn('Shadows not available on this scene type');
+                  console.log('Available properties:', Object.keys(world.scene || {}));
                 }
               }}">
             </bim-checkbox>
