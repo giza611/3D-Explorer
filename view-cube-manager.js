@@ -69,25 +69,66 @@ export class ViewCubeManager {
       return;
     }
 
-    // Define view positions for each cube face
-    const viewPositions = {
-      front: { x: 0, y: 0, z: 1 },
-      back: { x: 0, y: 0, z: -1 },
-      left: { x: -1, y: 0, z: 0 },
-      right: { x: 1, y: 0, z: 0 },
-      top: { x: 0, y: 1, z: 0 },
-      bottom: { x: 0, y: -1, z: 0 },
-    };
-
-    // Add click handlers for each face
+    // Add click handlers for each face via custom events
     const faceNames = ['front', 'back', 'left', 'right', 'top', 'bottom'];
     for (const face of faceNames) {
       this.viewCube.addEventListener(face, () => {
+        console.log(`Face event received: ${face}`);
         this.navigateToView(face);
       });
     }
 
+    // Add manual click handler as fallback for cases where web component
+    // internal click handlers don't work properly
+    this.viewCube.addEventListener('click', (event) => {
+      console.log('ViewCube click detected, attempting to determine face...');
+      const rect = this.viewCube.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      // Estimate which face was clicked based on position
+      // The cube is 120x120, so divide it into regions
+      const clickFace = this.determineFaceFromClick(x, y, rect.width, rect.height);
+
+      if (clickFace) {
+        console.log(`Determined face from click: ${clickFace}`);
+        // Dispatch the appropriate face event
+        const faceEvent = new CustomEvent(clickFace, { bubbles: true });
+        this.viewCube.dispatchEvent(faceEvent);
+      }
+    });
+
     console.log('ViewCube event listeners attached');
+  }
+
+  // Determine which face was clicked based on click coordinates
+  determineFaceFromClick(clickX, clickY, width, height) {
+    // Simple heuristic: divide cube into regions
+    // This is a basic implementation that might need refinement
+
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const threshold = width * 0.25; // 25% from center is a threshold
+
+    const dx = clickX - centerX;
+    const dy = clickY - centerY;
+
+    // Determine dominant direction
+    const absDx = Math.abs(dx);
+    const absDy = Math.abs(dy);
+
+    if (absDx > absDy) {
+      // Left or right face
+      return dx < 0 ? 'left' : 'right';
+    } else {
+      // Top or bottom face (or front if too centered)
+      if (absDy > threshold) {
+        return dy < 0 ? 'top' : 'bottom';
+      } else {
+        // Default to front if click is more centered
+        return 'front';
+      }
+    }
   }
 
   // Navigate to a specific view
