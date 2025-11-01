@@ -13,8 +13,6 @@ import { FragmentsModelsManager } from './fragments-models.js';
 import { VisibilityManager } from './visibility-manager.js';
 import { GridsManager } from './grids-manager.js';
 import { HighlighterManager } from './highlighter-manager.js';
-import { RenderOptionsManager } from './render-options.js';
-import * as OBCFront from '@thatopen/components-front';
 
 console.log('Starting 3D Worlds App...');
 
@@ -33,9 +31,9 @@ async function initApp() {
     console.log('World created');
 
     world.scene = new OBC.SimpleScene(components);
-    world.renderer = new OBCFront.PostproductionRenderer(components, container);
+    world.renderer = new OBC.SimpleRenderer(components, container);
     world.camera = new OBC.OrthoPerspectiveCamera(components);
-    console.log('Scene, PostproductionRenderer, OrthoPerspectiveCamera created');
+    console.log('Scene, Renderer, OrthoPerspectiveCamera created');
 
     components.init();
     console.log('Components initialized');
@@ -194,12 +192,6 @@ async function initApp() {
     const highlighter = new HighlighterManager(components, world);
     const highlighterReady = highlighter.init();
     console.log('Highlighter ready:', highlighterReady);
-
-    // Initialize Render Options
-    console.log('Initializing Render Options...');
-    const renderOptions = new RenderOptionsManager(components, world);
-    const renderOptionsReady = renderOptions.init();
-    console.log('Render Options ready:', renderOptionsReady);
 
     // Initialize UI
     console.log('Initializing UI...');
@@ -413,79 +405,6 @@ async function initApp() {
             </bim-checkbox>
           </bim-panel-section>
 
-          <bim-panel-section label="Render Options">
-            <bim-checkbox
-              label="Enable Postproduction"
-              ?disabled="${!renderOptionsReady}"
-              @change="${({ target }) => {
-                console.log('Postproduction toggled:', target.checked);
-                renderOptions.setPostproductionEnabled(target.checked);
-              }}">
-            </bim-checkbox>
-
-            <bim-checkbox
-              label="Enable Outlines"
-              ?disabled="${!renderOptionsReady}"
-              @change="${({ target }) => {
-                console.log('Outlines toggled:', target.checked);
-                renderOptions.setOutlinesEnabled(target.checked);
-              }}">
-            </bim-checkbox>
-
-            <bim-checkbox
-              label="Enable Edges"
-              ?disabled="${!renderOptionsReady}"
-              @change="${({ target }) => {
-                console.log('Edges toggled:', target.checked);
-                renderOptions.setEdgesEnabled(target.checked);
-              }}">
-            </bim-checkbox>
-
-            <bim-dropdown
-              label="Postproduction Style"
-              ?disabled="${!renderOptionsReady}"
-              @change="${({ target }) => {
-                const style = target.value[0];
-                console.log('Postproduction style changed:', style);
-                renderOptions.setStyle(style);
-              }}">
-              <bim-option label="Basic" value="COLOR"></bim-option>
-              <bim-option label="Pen" value="NORMAL"></bim-option>
-              <bim-option label="Shadowed Pen" value="DEPTH"></bim-option>
-              <bim-option label="Color Pen" value="COLOR_NORMAL"></bim-option>
-              <bim-option label="Color Shadows" value="COLOR_DEPTH"></bim-option>
-              <bim-option label="Color Pen Shadows" value="COLOR_NORMAL_DEPTH"></bim-option>
-            </bim-dropdown>
-
-            <bim-number-input
-              slider step="0.1" label="Outline Thickness" value="1" min="0" max="10"
-              ?disabled="${!renderOptionsReady}"
-              @change="${({ target }) => {
-                console.log('Outline thickness changed:', target.value);
-                renderOptions.setOutlineThickness(target.value);
-              }}">
-            </bim-number-input>
-
-            <bim-number-input
-              slider step="0.1" label="Outline Fill Opacity" value="0.5" min="0" max="1"
-              ?disabled="${!renderOptionsReady}"
-              @change="${({ target }) => {
-                console.log('Outline fill opacity changed:', target.value);
-                renderOptions.setOutlineFillOpacity(target.value);
-              }}">
-            </bim-number-input>
-
-            <bim-number-input
-              slider step="0.1" label="Edge Width" value="1" min="0" max="3"
-              ?disabled="${!renderOptionsReady}"
-              @change="${({ target }) => {
-                console.log('Edge width changed:', target.value);
-                renderOptions.setEdgeWidth(target.value);
-              }}">
-            </bim-number-input>
-
-            <bim-label>✨ Advanced rendering effects for enhanced visuals</bim-label>
-          </bim-panel-section>
         </bim-panel>`;
     });
 

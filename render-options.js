@@ -31,14 +31,22 @@ export class RenderOptionsManager {
       console.log('AO pass:', this.postproduction._aoPass);
       console.log('Composer:', this.postproduction._composer);
 
-      // Log properties of edge detection pass
+      // Passes are undefined - PostproductionRenderer not properly initialized
+      // The visual effects won't work until the renderer is properly set up
+      console.warn('PostproductionRenderer passes are not initialized. Visual effects disabled.');
+
+      // Log properties of edge detection pass if it exists
       if (this.postproduction._edgeDetectionPass) {
         console.log('Edge detection pass properties:', Object.keys(this.postproduction._edgeDetectionPass || {}));
+      } else {
+        console.warn('Edge detection pass not found - effects unavailable');
       }
 
-      // Log properties of outline pass
+      // Log properties of outline pass if it exists
       if (this.postproduction._simpleOutlinePass) {
         console.log('Outline pass properties:', Object.keys(this.postproduction._simpleOutlinePass || {}));
+      } else {
+        console.warn('Outline pass not found - effects unavailable');
       }
 
       // Don't set enabled immediately - the base pass isn't initialized yet
