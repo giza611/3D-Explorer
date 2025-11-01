@@ -13,6 +13,7 @@ import { FragmentsModelsManager } from './fragments-models.js';
 import { VisibilityManager } from './visibility-manager.js';
 import { GridsManager } from './grids-manager.js';
 import { HighlighterManager } from './highlighter-manager.js';
+import { ItemsDataManager } from './items-data-manager.js';
 
 console.log('Starting 3D Worlds App...');
 
@@ -193,6 +194,12 @@ async function initApp() {
     const highlighterReady = highlighter.init();
     console.log('Highlighter ready:', highlighterReady);
 
+    // Initialize Items Data Manager
+    console.log('Initializing Items Data Manager...');
+    const itemsDataManager = new ItemsDataManager(components, world);
+    const itemsDataManagerReady = itemsDataManager.init(highlighter);
+    console.log('Items Data Manager ready:', itemsDataManagerReady);
+
     // Initialize UI
     console.log('Initializing UI...');
     try {
@@ -370,6 +377,14 @@ async function initApp() {
             <bim-label>📍 Click on model elements to select and highlight them</bim-label>
             <bim-label>⌃ Hold Ctrl + Click for multi-selection</bim-label>
           </bim-panel-section>
+
+          ${itemsDataManagerReady ? BUI.html`
+            <bim-panel-section label="Properties">
+              <div id="properties-display" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px; max-height: 400px; overflow-y: auto;">
+                <div style="color: #999; font-size: 12px;">🔍 Properties of selected element will appear here</div>
+              </div>
+            </bim-panel-section>
+          ` : BUI.html``}
 
           <bim-panel-section label="Controls">
             <bim-color-input
@@ -1940,6 +1955,65 @@ async function initApp() {
     if (gridsManagerReady) {
       console.log('Setting up Grids UI controls...');
       // Grids controls are now handled by BUI components in the panel template
+    }
+
+    // Setup Properties / Items Data Controls
+    if (itemsDataManagerReady) {
+      console.log('Setting up Properties display...');
+      const setupPropertiesDisplay = () => {
+        try {
+          const propertiesContainer = document.getElementById('properties-display');
+          console.log('Properties container found:', !!propertiesContainer);
+          if (!propertiesContainer) {
+            console.warn('Properties container not found, retrying...');
+            setTimeout(setupPropertiesDisplay, 200);
+            return;
+          }
+
+          // Initialize the properties table with the container
+          itemsDataManager.initPropertiesTable(propertiesContainer).then((success) => {
+            if (success) {
+              console.log('Properties table initialized successfully');
+            } else {
+              console.warn('Failed to initialize properties table');
+              propertiesContainer.innerHTML = '<div style="color: #ff9800; padding: 10px; font-size: 11px;">⚠️ Could not load properties component. Please ensure @thatopen/ui-obc is installed.</div>';
+            }
+          }).catch((error) => {
+            console.error('Error initializing properties table:', error);
+            propertiesContainer.innerHTML = '<div style="color: #ff9800; padding: 10px; font-size: 11px;">⚠️ Error loading properties component</div>';
+          });
+
+          console.log('Properties display setup created successfully');
+        } catch (error) {
+          console.error('Error setting up properties display:', error);
+        }
+      };
+      setupPropertiesDisplay();
+    }
+
+    // Connect Highlighter selection events to update Properties display
+    if (highlighterReady && itemsDataManagerReady) {
+      console.log('Connecting highlighter selection events to properties display...');
+      try {
+        // Listen to selection events from the highlighter
+        if (highlighter.highlighter && highlighter.highlighter.events) {
+          highlighter.highlighter.events.select.onHighlight.add((modelIdMap) => {
+            console.log('Highlighter selection changed, updating properties:', modelIdMap);
+            itemsDataManager.updateSelection(modelIdMap);
+          });
+
+          highlighter.highlighter.events.select.onClear.add(() => {
+            console.log('Highlighter selection cleared, clearing properties');
+            itemsDataManager.clearProperties();
+          });
+
+          console.log('Highlighter selection events connected successfully');
+        } else {
+          console.warn('Highlighter events not available');
+        }
+      } catch (error) {
+        console.error('Error connecting highlighter events:', error);
+      }
     }
 
     // Settings button removed - panel is now always visible
