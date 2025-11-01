@@ -30,10 +30,10 @@ async function initApp() {
     const world = worlds.create();
     console.log('World created');
 
-    world.scene = new OBC.SimpleScene(components);
+    world.scene = new OBC.ShadowedScene(components);
     world.renderer = new OBC.SimpleRenderer(components, container);
     world.camera = new OBC.OrthoPerspectiveCamera(components);
-    console.log('Scene, Renderer, OrthoPerspectiveCamera created');
+    console.log('Scene (ShadowedScene), Renderer, OrthoPerspectiveCamera created');
 
     components.init();
     console.log('Components initialized');
@@ -400,31 +400,13 @@ async function initApp() {
               label="Enable Shadows"
               @change="${({ target }) => {
                 console.log('Shadows toggled:', target.checked);
-                console.log('Attempting to set shadows...');
-
-                // Log config properties to find shadows
-                console.log('Scene config properties:', Object.keys(world.scene.config || {}));
-                console.log('Scene config object:', world.scene.config);
-
-                // Try different possible shadow property locations
+                // ShadowedScene has shadowsEnabled property
                 if (world.scene.shadowsEnabled !== undefined) {
                   world.scene.shadowsEnabled = target.checked;
-                  console.log('Set world.scene.shadowsEnabled');
-                } else if (world.scene.config && world.scene.config.shadowsEnabled !== undefined) {
-                  world.scene.config.shadowsEnabled = target.checked;
-                  console.log('Set world.scene.config.shadowsEnabled');
-                } else if (world.scene.config && world.scene.config.shadows !== undefined) {
-                  world.scene.config.shadows = target.checked;
-                  console.log('Set world.scene.config.shadows');
-                } else if (world.renderer && world.renderer.shadowMap) {
-                  world.renderer.shadowMap.enabled = target.checked;
-                  console.log('Set world.renderer.shadowMap.enabled');
+                  console.log('Shadows:', target.checked ? 'enabled' : 'disabled');
                 } else {
-                  console.warn('Could not find shadows property');
+                  console.warn('Shadows not available on this scene type');
                 }
-
-                console.log('Scene shadowsEnabled value:', world.scene.shadowsEnabled);
-                console.log('Scene config shadows value:', world.scene.config.shadowsEnabled || world.scene.config.shadows);
               }}">
             </bim-checkbox>
           </bim-panel-section>
