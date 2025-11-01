@@ -89,6 +89,14 @@ export class ItemsDataManager {
 
     try {
       console.log('Updating properties display with selection:', modelIdMap);
+      console.log('ModelIdMap type:', typeof modelIdMap);
+      console.log('ModelIdMap keys:', modelIdMap ? Object.keys(modelIdMap) : 'null');
+
+      // Log the structure of modelIdMap for debugging
+      for (const [key, value] of Object.entries(modelIdMap || {})) {
+        console.log(`  ${key}:`, value);
+      }
+
       this.selectedModelIdMap = modelIdMap || {};
 
       // Update the table with selected items - pass as object with modelIdMap property
