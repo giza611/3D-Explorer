@@ -128,24 +128,29 @@ export class ViewCubeManager {
       const camZ = center.z + config.z * distance;
 
       // Use camera controls to set position
-      if (
-        this.cameraControls.fitToAll &&
-        typeof this.cameraControls.fitToAll === 'function'
-      ) {
-        // Try to use fitToAll first
-        await this.cameraControls.fitToAll(this.world.scene.three);
-        console.log(`${viewName} view applied`);
-      } else if (this.world.camera.controls && this.world.camera.controls.setLookAt) {
-        // Fallback to direct camera positioning
+      if (this.world.camera.controls && this.world.camera.controls.setLookAt) {
+        // Use direct camera positioning with animation
+        console.log(`Setting camera for ${viewName} view: [${camX}, ${camY}, ${camZ}] -> [${center.x}, ${center.y}, ${center.z}]`);
         await this.world.camera.controls.setLookAt(
           camX,
           camY,
           camZ,
           center.x,
           center.y,
-          center.z
+          center.z,
+          true // Enable animation
         );
         console.log(`${viewName} view applied`);
+      } else if (
+        this.cameraControls.fitToAll &&
+        typeof this.cameraControls.fitToAll === 'function'
+      ) {
+        // Fallback to fitToAll if setLookAt not available
+        console.log(`Using fitToAll for ${viewName} view`);
+        await this.cameraControls.fitToAll(this.world.scene.three);
+        console.log(`${viewName} view applied`);
+      } else {
+        console.warn(`Camera controls not available for ${viewName} view`);
       }
 
       return true;
