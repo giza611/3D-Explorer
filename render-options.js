@@ -50,12 +50,19 @@ export class RenderOptionsManager {
 
     try {
       console.log('Attempting to set postproduction enabled:', enabled);
-      this.postproduction.enabled = enabled;
+      // Try public property first, then private property
+      if (this.postproduction.enabled !== undefined) {
+        this.postproduction.enabled = enabled;
+      } else if (this.postproduction._enabled !== undefined) {
+        this.postproduction._enabled = enabled;
+      } else {
+        console.warn('Could not find enabled property on postproduction');
+        return false;
+      }
       console.log('Postproduction:', enabled ? 'enabled' : 'disabled');
       return true;
     } catch (error) {
-      console.warn('Could not toggle postproduction (base pass may not be ready):', error.message);
-      // The base pass might not be initialized yet - this is okay, it will work when user interacts
+      console.warn('Could not toggle postproduction:', error.message);
       return false;
     }
   }
@@ -69,12 +76,15 @@ export class RenderOptionsManager {
 
     try {
       console.log('Attempting to set outlines enabled:', enabled);
+      // Try public property first, then private property
       if (this.postproduction.outlinesEnabled !== undefined) {
         this.postproduction.outlinesEnabled = enabled;
-      } else if (this.postproduction.outlinePass !== undefined) {
-        this.postproduction.outlinePass.enabled = enabled;
+      } else if (this.postproduction._outlinesEnabled !== undefined) {
+        this.postproduction._outlinesEnabled = enabled;
+      } else if (this.postproduction._simpleOutlinePass) {
+        this.postproduction._simpleOutlinePass.enabled = enabled;
       } else {
-        console.warn('Outlines property not found');
+        console.warn('Could not find outlinesEnabled property');
         return false;
       }
       console.log('Outlines:', enabled ? 'enabled' : 'disabled');
@@ -94,13 +104,19 @@ export class RenderOptionsManager {
 
     try {
       console.log('Attempting to set postproduction style to:', style);
-      this.postproduction.style = style;
+      // Try public property first, then private property
+      if (this.postproduction.style !== undefined) {
+        this.postproduction.style = style;
+      } else if (this.postproduction._style !== undefined) {
+        this.postproduction._style = style;
+      } else {
+        console.warn('Could not find style property on postproduction');
+        return false;
+      }
       console.log('Postproduction style set to:', style);
-      console.log('Current style value:', this.postproduction.style);
       return true;
     } catch (error) {
-      console.error('Error setting postproduction style:', error);
-      console.error('Available style options:', this.getAvailableStyles());
+      console.warn('Could not set postproduction style:', error.message);
       return false;
     }
   }
@@ -113,13 +129,19 @@ export class RenderOptionsManager {
     }
 
     try {
-      // Try different possible API paths for outline thickness
-      if (this.postproduction.outlinePass?.passComposePass?.thickness !== undefined) {
-        this.postproduction.outlinePass.passComposePass.thickness = value;
-      } else if (this.postproduction.outlinePass?.thickness !== undefined) {
-        this.postproduction.outlinePass.thickness = value;
+      console.log('Attempting to set outline thickness to:', value);
+      // Access the private _simpleOutlinePass
+      if (this.postproduction._simpleOutlinePass) {
+        if (this.postproduction._simpleOutlinePass.thickness !== undefined) {
+          this.postproduction._simpleOutlinePass.thickness = value;
+        } else if (this.postproduction._simpleOutlinePass.passComposePass?.thickness !== undefined) {
+          this.postproduction._simpleOutlinePass.passComposePass.thickness = value;
+        } else {
+          console.warn('Thickness property not found on simple outline pass');
+          return false;
+        }
       } else {
-        console.warn('Outline thickness property not found on postproduction object');
+        console.warn('Simple outline pass not found');
         return false;
       }
       console.log('Outline thickness set to:', value);
@@ -138,13 +160,19 @@ export class RenderOptionsManager {
     }
 
     try {
-      // Try different possible API paths for outline fill opacity
-      if (this.postproduction.outlinePass?.passComposePass?.fillOpacity !== undefined) {
-        this.postproduction.outlinePass.passComposePass.fillOpacity = value;
-      } else if (this.postproduction.outlinePass?.fillOpacity !== undefined) {
-        this.postproduction.outlinePass.fillOpacity = value;
+      console.log('Attempting to set outline fill opacity to:', value);
+      // Access the private _simpleOutlinePass
+      if (this.postproduction._simpleOutlinePass) {
+        if (this.postproduction._simpleOutlinePass.fillOpacity !== undefined) {
+          this.postproduction._simpleOutlinePass.fillOpacity = value;
+        } else if (this.postproduction._simpleOutlinePass.passComposePass?.fillOpacity !== undefined) {
+          this.postproduction._simpleOutlinePass.passComposePass.fillOpacity = value;
+        } else {
+          console.warn('Fill opacity property not found on simple outline pass');
+          return false;
+        }
       } else {
-        console.warn('Outline fill opacity property not found on postproduction object');
+        console.warn('Simple outline pass not found');
         return false;
       }
       console.log('Outline fill opacity set to:', value);
@@ -163,13 +191,19 @@ export class RenderOptionsManager {
     }
 
     try {
-      // Try different possible API paths for edge width
-      if (this.postproduction.edgesPass?.edgeDetectionPass?.edgeStrength !== undefined) {
-        this.postproduction.edgesPass.edgeDetectionPass.edgeStrength = value;
-      } else if (this.postproduction.edgesPass?.edgeStrength !== undefined) {
-        this.postproduction.edgesPass.edgeStrength = value;
+      console.log('Attempting to set edge width to:', value);
+      // Access the private _edgeDetectionPass
+      if (this.postproduction._edgeDetectionPass) {
+        if (this.postproduction._edgeDetectionPass.edgeStrength !== undefined) {
+          this.postproduction._edgeDetectionPass.edgeStrength = value;
+        } else if (this.postproduction._edgeDetectionPass.strength !== undefined) {
+          this.postproduction._edgeDetectionPass.strength = value;
+        } else {
+          console.warn('Edge strength property not found on edge detection pass');
+          return false;
+        }
       } else {
-        console.warn('Edge width property not found on postproduction object');
+        console.warn('Edge detection pass not found');
         return false;
       }
       console.log('Edge width set to:', value);
@@ -188,11 +222,12 @@ export class RenderOptionsManager {
     }
 
     try {
-      // Try different possible API paths for edges
-      if (this.postproduction.edgesPass?.enabled !== undefined) {
-        this.postproduction.edgesPass.enabled = enabled;
+      console.log('Attempting to set edges enabled:', enabled);
+      // Access the private _edgeDetectionPass
+      if (this.postproduction._edgeDetectionPass) {
+        this.postproduction._edgeDetectionPass.enabled = enabled;
       } else {
-        console.warn('Edges enabled property not found on postproduction object');
+        console.warn('Edge detection pass not found');
         return false;
       }
       console.log('Edges:', enabled ? 'enabled' : 'disabled');
