@@ -3,6 +3,7 @@ import Stats from 'stats.js';
 import * as BUI from '@thatopen/ui';
 import * as OBC from '@thatopen/components';
 import { AreaMeasurementManager } from './area-measurement.js';
+import { LengthMeasurementManager } from './length-measurement.js';
 import { IfcLoaderManager } from './ifc-loader.js';
 import { CameraControlsManager } from './camera-controls.js';
 import { ViewsManager } from './views-manager.js';
@@ -129,6 +130,12 @@ async function initApp() {
     const areaMeasurement = new AreaMeasurementManager(components, world, container);
     const areaMeasurementReady = await areaMeasurement.init();
     console.log('Area Measurement ready:', areaMeasurementReady);
+
+    // Initialize Length Measurement
+    console.log('Initializing Length Measurement...');
+    const lengthMeasurement = new LengthMeasurementManager(components, world);
+    const lengthMeasurementReady = lengthMeasurement.init();
+    console.log('Length Measurement ready:', lengthMeasurementReady);
 
     // Initialize IFC Loader
     console.log('Initializing IFC Loader...');
@@ -283,6 +290,36 @@ async function initApp() {
               </bim-button>
 
               <bim-label>💡 Double-click on model to measure areas</bim-label>
+            </bim-panel-section>
+          ` : BUI.html``}
+
+          ${lengthMeasurementReady ? BUI.html`
+            <bim-panel-section label="Length Measurement">
+              <bim-checkbox
+                label="Enable Length Measurements"
+                @change="${({ target }) => {
+                  console.log('Length measurements toggled:', target.checked);
+                  lengthMeasurement.toggle(target.checked);
+                }}">
+              </bim-checkbox>
+
+              <bim-color-input
+                label="Measurement Color" color="#494cb6"
+                @input="${({ target }) => {
+                  console.log('Length measurement color changed:', target.color);
+                  lengthMeasurement.setColor(target.color);
+                }}">
+              </bim-color-input>
+
+              <bim-button @click="${() => {
+                console.log('Clearing all length measurements');
+                lengthMeasurement.clearAll();
+              }}">
+                Clear All Measurements
+              </bim-button>
+
+              <bim-label>💡 Double-click on model to measure distances</bim-label>
+              <bim-label>🗑️ Press Delete key to remove measurements</bim-label>
             </bim-panel-section>
           ` : BUI.html``}
 
