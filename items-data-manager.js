@@ -61,6 +61,10 @@ export class ItemsDataManager {
         modelIdMap: {},
       });
 
+      // Configure table options as per tutorial
+      propertiesTable.preserveStructureOnFilter = true;
+      propertiesTable.indentationInText = false;
+
       this.propertiesTable = propertiesTable;
       this.updatePropertiesTable = updatePropertiesTable;
 
@@ -87,8 +91,8 @@ export class ItemsDataManager {
       console.log('Updating properties display with selection:', modelIdMap);
       this.selectedModelIdMap = modelIdMap || {};
 
-      // Update the table with selected items
-      this.updatePropertiesTable(modelIdMap || {});
+      // Update the table with selected items - pass as object with modelIdMap property
+      this.updatePropertiesTable({ modelIdMap: modelIdMap || {} });
 
       return true;
     } catch (error) {
@@ -103,7 +107,8 @@ export class ItemsDataManager {
       console.log('Clearing all properties');
       this.selectedModelIdMap = {};
       if (this.updatePropertiesTable) {
-        this.updatePropertiesTable({});
+        // Pass empty modelIdMap as per tutorial format
+        this.updatePropertiesTable({ modelIdMap: {} });
       }
       return true;
     } catch (error) {
