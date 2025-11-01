@@ -30,30 +30,16 @@ async function initApp() {
     const world = worlds.create();
     console.log('World created');
 
-    world.scene = new OBC.ShadowedScene(components);
+    world.scene = new OBC.SimpleScene(components);
     world.renderer = new OBC.SimpleRenderer(components, container);
     world.camera = new OBC.OrthoPerspectiveCamera(components);
-    console.log('Scene (ShadowedScene), Renderer, OrthoPerspectiveCamera created');
-
-    // Debug: Log ShadowedScene properties
-    console.log('ShadowedScene properties:', Object.keys(world.scene || {}));
-    console.log('ShadowedScene object:', world.scene);
+    console.log('Scene (SimpleScene), Renderer, OrthoPerspectiveCamera created');
 
     components.init();
     console.log('Components initialized');
 
     world.scene.setup();
     console.log('Scene setup complete');
-
-    // Debug: Check shadowsEnabled after setup
-    console.log('shadowsEnabled available:', world.scene.shadowsEnabled !== undefined);
-    console.log('shadowsEnabled value:', world.scene.shadowsEnabled);
-
-    // Try to enable shadows by default
-    if (world.scene.shadowsEnabled !== undefined) {
-      world.scene.shadowsEnabled = true;
-      console.log('Shadows enabled by default');
-    }
 
     world.scene.three.background = null;
 
@@ -87,17 +73,6 @@ async function initApp() {
       world.scene.three.add(model.object);
       modelAdded = true;
       fragments.core.update(true);
-
-      // Configure shadows for loaded models
-      if (world.scene.recomputeShadows) {
-        console.log('Recomputing shadows for newly loaded model');
-        try {
-          world.scene.recomputeShadows();
-          console.log('Shadows recomputed successfully');
-        } catch (e) {
-          console.warn('Could not recompute shadows:', e.message);
-        }
-      }
     });
 
     // Start with empty scene - models can be loaded via IFC Loader or FragmentsManager
@@ -420,34 +395,6 @@ async function initApp() {
                 world.scene.config.ambientLight.intensity = target.value;
               }}">
             </bim-number-input>
-
-            <bim-checkbox
-              label="Enable Shadows"
-              @change="${({ target }) => {
-                console.log('=== Shadows Toggle ===');
-                console.log('Checkbox changed to:', target.checked);
-
-                // ShadowedScene has shadowsEnabled property (getter/setter)
-                if (world.scene.shadowsEnabled !== undefined) {
-                  world.scene.shadowsEnabled = target.checked;
-                  console.log('Set shadowsEnabled to:', target.checked);
-                  console.log('Shadows:', target.checked ? 'enabled' : 'disabled');
-
-                  // Recompute shadows after toggling
-                  if (world.scene.recomputeShadows) {
-                    try {
-                      console.log('Recomputing shadows...');
-                      world.scene.recomputeShadows();
-                      console.log('Shadows recomputed successfully');
-                    } catch (e) {
-                      console.warn('Could not recompute shadows:', e.message);
-                    }
-                  }
-                } else {
-                  console.warn('Shadows not available on this scene type');
-                }
-              }}">
-            </bim-checkbox>
           </bim-panel-section>
 
         </bim-panel>`;
