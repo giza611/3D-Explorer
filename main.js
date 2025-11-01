@@ -429,26 +429,7 @@ async function initApp() {
     document.body.append(panel);
     console.log('Panel appended');
 
-    // Append ViewCube to body
-    if (viewCubeManagerReady && viewCubeManager.getViewCubeElement()) {
-      try {
-        const viewCubeElement = viewCubeManager.getViewCubeElement();
-        document.body.append(viewCubeElement);
-
-        // Style the ViewCube for positioning in bottom-left corner
-        viewCubeElement.style.cssText = `
-          position: fixed;
-          bottom: 20px;
-          left: 20px;
-          width: 120px;
-          height: 120px;
-          z-index: 100;
-        `;
-        console.log('ViewCube appended to body with positioning');
-      } catch (error) {
-        console.warn('Could not append ViewCube to body:', error);
-      }
-    }
+    // ViewCube is initialized and appended in ViewCubeManager.init()
 
     // Setup Theme Toggle
     const setupThemeToggle = () => {

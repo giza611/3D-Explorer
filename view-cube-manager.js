@@ -22,6 +22,21 @@ export class ViewCubeManager {
         return false;
       }
 
+      // Append to DOM first (required for web component to fully initialize)
+      document.body.appendChild(this.viewCube);
+      console.log('ViewCube appended to DOM');
+
+      // Style the ViewCube for positioning in bottom-left corner
+      this.viewCube.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        width: 120px;
+        height: 120px;
+        z-index: 100;
+      `;
+      console.log('ViewCube styled with fixed positioning');
+
       // Set camera reference
       this.viewCube.camera = this.world.camera.three;
       console.log('ViewCube camera set');
