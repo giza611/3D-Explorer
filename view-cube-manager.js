@@ -122,8 +122,13 @@ export class ViewCubeManager {
         event.clientY >= rect.top &&
         event.clientY <= rect.bottom;
 
-      if (isWithinBounds && event.target !== this.viewCube && !this.viewCube.contains(event.target)) {
-        console.log('Document-level capture: ViewCube click detected');
+      // Trigger for any click within ViewCube bounds (including when event.target IS the viewCube)
+      if (isWithinBounds) {
+        console.log('Document-level capture: ViewCube click detected at:', {
+          x: event.clientX,
+          y: event.clientY,
+          target: event.target?.tagName || 'unknown'
+        });
         event.stopPropagation();
         event.preventDefault();
 
@@ -139,10 +144,65 @@ export class ViewCubeManager {
       }
     };
 
-    // Add document-level listener in capture phase
+    // Add document-level listener in capture phase for click events
     document.addEventListener('click', handleDocumentClick, true);
 
-    console.log('ViewCube event listeners attached (including capture phase)');
+    // ALSO add listeners for pointer events which might be triggered before click
+    const handlePointerEvent = (event) => {
+      // Only process on pointer up to match click behavior
+      if (event.type === 'pointerup' || event.type === 'pointerdown') {
+        // Don't stop propagation for pointer events to avoid interfering with other handlers
+        const rect = this.viewCube.getBoundingClientRect();
+        const isWithinBounds =
+          event.clientX >= rect.left &&
+          event.clientX <= rect.right &&
+          event.clientY >= rect.top &&
+          event.clientY <= rect.bottom;
+
+        if (isWithinBounds && event.type === 'pointerup') {
+          console.log('Pointer event: ViewCube area detected');
+          // Don't prevent default for pointer - just log for now
+        }
+      }
+    };
+
+    // Add pointer event listeners in capture phase as backup
+    document.addEventListener('pointerdown', handlePointerEvent, true);
+    document.addEventListener('pointerup', handlePointerEvent, true);
+
+    // Also add mousedown/mouseup as additional fallback
+    const handleMouseEvent = (event) => {
+      if (event.type === 'mouseup') {
+        const rect = this.viewCube.getBoundingClientRect();
+        const isWithinBounds =
+          event.clientX >= rect.left &&
+          event.clientX <= rect.right &&
+          event.clientY >= rect.top &&
+          event.clientY <= rect.bottom;
+
+        if (isWithinBounds) {
+          console.log('Mouse event: ViewCube area detected, dispatching click...');
+          // Manually trigger the click handler logic
+          const x = event.clientX - rect.left;
+          const y = event.clientY - rect.top;
+          const clickFace = this.determineFaceFromClick(x, y, rect.width, rect.height);
+
+          if (clickFace) {
+            console.log(`Mouse event determined face: ${clickFace}`);
+            event.stopPropagation();
+            event.preventDefault();
+
+            const faceEvent = new CustomEvent(clickFace, { bubbles: true });
+            this.viewCube.dispatchEvent(faceEvent);
+          }
+        }
+      }
+    };
+
+    document.addEventListener('mouseup', handleMouseEvent, true);
+    document.addEventListener('mousedown', handleMouseEvent, true);
+
+    console.log('ViewCube event listeners attached (including capture phase + pointer/mouse events)');
   }
 
   // Determine which face was clicked based on click coordinates
