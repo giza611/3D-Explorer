@@ -293,35 +293,40 @@ async function initApp() {
             </bim-panel-section>
           ` : BUI.html``}
 
-          ${lengthMeasurementReady ? BUI.html`
-            <bim-panel-section label="Length Measurement">
-              <bim-checkbox
-                label="Enable Length Measurements"
-                @change="${({ target }) => {
-                  console.log('Length measurements toggled:', target.checked);
-                  lengthMeasurement.toggle(target.checked);
-                }}">
-              </bim-checkbox>
-
-              <bim-color-input
-                label="Measurement Color" color="#494cb6"
-                @input="${({ target }) => {
-                  console.log('Length measurement color changed:', target.color);
-                  lengthMeasurement.setColor(target.color);
-                }}">
-              </bim-color-input>
-
-              <bim-button @click="${() => {
-                console.log('Clearing all length measurements');
-                lengthMeasurement.clearAll();
+          <bim-panel-section label="Length Measurement">
+            <bim-checkbox
+              label="Enable Length Measurements"
+              ?disabled="${!lengthMeasurementReady}"
+              @change="${({ target }) => {
+                console.log('Length measurements toggled:', target.checked);
+                lengthMeasurement.toggle(target.checked);
               }}">
-                Clear All Measurements
-              </bim-button>
+            </bim-checkbox>
 
+            <bim-color-input
+              label="Measurement Color" color="#494cb6"
+              ?disabled="${!lengthMeasurementReady}"
+              @input="${({ target }) => {
+                console.log('Length measurement color changed:', target.color);
+                lengthMeasurement.setColor(target.color);
+              }}">
+            </bim-color-input>
+
+            <bim-button @click="${() => {
+              console.log('Clearing all length measurements');
+              lengthMeasurement.clearAll();
+            }}"
+            ?disabled="${!lengthMeasurementReady}">
+              Clear All Measurements
+            </bim-button>
+
+            ${!lengthMeasurementReady ? BUI.html`
+              <bim-label style="color: #ff9800; font-weight: bold;">⚠️ Component not available</bim-label>
+            ` : BUI.html`
               <bim-label>💡 Double-click on model to measure distances</bim-label>
               <bim-label>🗑️ Press Delete key to remove measurements</bim-label>
-            </bim-panel-section>
-          ` : BUI.html``}
+            `}
+          </bim-panel-section>
 
           <bim-panel-section label="Controls">
             <bim-color-input
