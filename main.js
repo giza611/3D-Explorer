@@ -87,6 +87,17 @@ async function initApp() {
       world.scene.three.add(model.object);
       modelAdded = true;
       fragments.core.update(true);
+
+      // Configure shadows for loaded models
+      if (world.scene.recomputeShadows) {
+        console.log('Recomputing shadows for newly loaded model');
+        try {
+          world.scene.recomputeShadows();
+          console.log('Shadows recomputed successfully');
+        } catch (e) {
+          console.warn('Could not recompute shadows:', e.message);
+        }
+      }
     });
 
     // Start with empty scene - models can be loaded via IFC Loader or FragmentsManager
@@ -415,22 +426,25 @@ async function initApp() {
               @change="${({ target }) => {
                 console.log('=== Shadows Toggle ===');
                 console.log('Checkbox changed to:', target.checked);
-                console.log('Scene type:', world.scene.constructor.name);
-                console.log('shadowsEnabled property exists:', world.scene.shadowsEnabled !== undefined);
-                console.log('Current shadowsEnabled value before:', world.scene.shadowsEnabled);
 
-                // ShadowedScene has shadowsEnabled property
+                // ShadowedScene has shadowsEnabled property (getter/setter)
                 if (world.scene.shadowsEnabled !== undefined) {
                   world.scene.shadowsEnabled = target.checked;
                   console.log('Set shadowsEnabled to:', target.checked);
-                  console.log('Current shadowsEnabled value after:', world.scene.shadowsEnabled);
                   console.log('Shadows:', target.checked ? 'enabled' : 'disabled');
 
-                  // Log scene config to understand shadow state
-                  console.log('Scene config:', world.scene.config);
+                  // Recompute shadows after toggling
+                  if (world.scene.recomputeShadows) {
+                    try {
+                      console.log('Recomputing shadows...');
+                      world.scene.recomputeShadows();
+                      console.log('Shadows recomputed successfully');
+                    } catch (e) {
+                      console.warn('Could not recompute shadows:', e.message);
+                    }
+                  }
                 } else {
                   console.warn('Shadows not available on this scene type');
-                  console.log('Available properties:', Object.keys(world.scene || {}));
                 }
               }}">
             </bim-checkbox>
