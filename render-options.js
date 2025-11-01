@@ -24,6 +24,23 @@ export class RenderOptionsManager {
       console.log('Postproduction properties:', propKeys);
       console.log('Property names:', propKeys.join(', '));
 
+      // Log the actual pass objects and their properties
+      console.log('Base pass:', this.postproduction._basePass);
+      console.log('Outline pass:', this.postproduction._simpleOutlinePass);
+      console.log('Edge detection pass:', this.postproduction._edgeDetectionPass);
+      console.log('AO pass:', this.postproduction._aoPass);
+      console.log('Composer:', this.postproduction._composer);
+
+      // Log properties of edge detection pass
+      if (this.postproduction._edgeDetectionPass) {
+        console.log('Edge detection pass properties:', Object.keys(this.postproduction._edgeDetectionPass || {}));
+      }
+
+      // Log properties of outline pass
+      if (this.postproduction._simpleOutlinePass) {
+        console.log('Outline pass properties:', Object.keys(this.postproduction._simpleOutlinePass || {}));
+      }
+
       // Don't set enabled immediately - the base pass isn't initialized yet
       // The PostproductionRenderer needs to be fully set up before we can modify its properties
       // Users will control it via UI which happens after full initialization
