@@ -1,9 +1,11 @@
 import * as THREE from 'three';
+import * as OBCFront from '@thatopen/components-front';
 
 export class LengthMeasurementManager {
-  constructor(components, world) {
+  constructor(components, world, container) {
     this.components = components;
     this.world = world;
+    this.container = container;
     this.measurer = null;
     this.measurerReady = false;
     this.enabled = false;
@@ -13,121 +15,103 @@ export class LengthMeasurementManager {
     console.log('Initializing Length Measurement...');
 
     try {
-      // Try to get LengthMeasurement component - it might be under different names
-      let LengthMeasurementComponent = null;
+      // Get the LengthMeasurement component from the front module
+      const LengthMeasurement = OBCFront.LengthMeasurement;
 
-      // Try different possible names/locations
-      try {
-        const OBF = require('@thatopen/fragments');
-        if (OBF && OBF.LengthMeasurement) {
-          LengthMeasurementComponent = OBF.LengthMeasurement;
-        }
-      } catch (e) {
-        console.warn('Could not import from @thatopen/fragments:', e.message);
-      }
-
-      if (!LengthMeasurementComponent) {
-        console.warn('LengthMeasurement component not available - feature disabled');
-        this.measurerReady = false;
+      if (!LengthMeasurement) {
+        console.warn('LengthMeasurement not found in OBCFront');
+        console.warn('Available components:', Object.keys(OBCFront).slice(0, 20));
         return false;
       }
 
-      this.measurer = this.components.get(LengthMeasurementComponent);
-
-      if (!this.measurer) {
-        console.warn('Could not instantiate LengthMeasurement component');
-        return false;
-      }
-
-      // Configure the measurer
+      // Create the measurer instance
+      this.measurer = new LengthMeasurement(this.components);
       this.measurer.world = this.world;
+      this.measurer.enabled = false; // Start disabled
+      this.measurer.color.set(0x494cb6); // Set measurement color
 
-      try {
-        this.measurer.color = new THREE.Color('#494cb6');
-      } catch (e) {
-        console.warn('Could not set measurement color:', e);
-      }
-
-      this.measurer.enabled = false;
-
-      // Setup double-click handler for measurement creation
-      try {
+      // Setup double-click to create measurements
+      if (this.container) {
+        this.container.ondblclick = () => this.create();
+      } else {
+        // Fallback to canvas element
         const canvas = document.querySelector('canvas');
         if (canvas) {
-          canvas.addEventListener('dblclick', (event) => {
-            if (!this.enabled || !this.measurer) return;
-            try {
-              this.measurer.create();
-            } catch (error) {
-              console.warn('Error creating measurement:', error);
-            }
-          });
+          canvas.addEventListener('dblclick', () => this.create());
         }
-      } catch (e) {
-        console.warn('Could not setup double-click handler:', e);
       }
 
-      // Setup Delete key handler for measurement removal
-      try {
-        document.addEventListener('keydown', (event) => {
-          if (event.key === 'Delete' && this.enabled && this.measurer) {
-            try {
-              this.measurer.delete();
-            } catch (error) {
-              console.warn('Error deleting measurement:', error);
-            }
-          }
-        });
-      } catch (e) {
-        console.warn('Could not setup Delete key handler:', e);
-      }
+      // Setup keyboard shortcuts
+      document.addEventListener('keydown', (e) => this.handleKeyPress(e));
 
       this.measurerReady = true;
       console.log('Length Measurement initialized successfully');
       return true;
     } catch (error) {
-      console.error('Error initializing Length Measurement:', error);
+      console.warn('Could not initialize Length Measurement:', error.message);
       this.measurerReady = false;
       return false;
     }
   }
 
-  // Toggle measurement tool on/off
-  toggle(enabled) {
+  create() {
+    if (!this.measurer || !this.enabled) return;
+
     try {
-      if (!this.measurerReady || !this.measurer) {
-        console.warn('Length measurement not initialized');
-        return false;
-      }
-
-      this.enabled = enabled;
-      this.measurer.enabled = enabled;
-      this.measurer.visible = enabled;
-
-      if (enabled) {
-        console.log('Length measurement enabled');
-      } else {
-        console.log('Length measurement disabled');
-      }
-
-      return true;
+      this.measurer.create();
+      console.log('Length measurement created');
     } catch (error) {
-      console.error('Error toggling measurement:', error);
-      return false;
+      console.error('Error creating measurement:', error);
     }
   }
 
-  // Set measurement color
-  setColor(hexColor) {
-    try {
-      if (!this.measurer) {
-        console.warn('Measurer not initialized');
-        return false;
-      }
+  handleKeyPress(event) {
+    if (!this.measurer || !this.enabled) return;
 
-      const color = new (require('three')).Color(hexColor);
-      this.measurer.color = color;
-      console.log('Measurement color set to:', hexColor);
+    // Delete measurement on Delete or Backspace
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      try {
+        this.measurer.delete();
+        console.log('Measurement deleted');
+      } catch (error) {
+        console.warn('Could not delete measurement:', error);
+      }
+    }
+
+    // Enter to complete measurement
+    if (event.key === 'Enter') {
+      try {
+        this.measurer.endCreation();
+        console.log('Measurement completed');
+      } catch (error) {
+        console.warn('Could not complete measurement:', error);
+      }
+    }
+  }
+
+  // Toggle measurement tool on/off
+  toggle(enabled) {
+    if (!this.measurer) {
+      console.warn('Length measurement not initialized');
+      return false;
+    }
+
+    this.enabled = enabled;
+    this.measurer.enabled = enabled;
+    console.log('Length Measurement:', enabled ? 'enabled' : 'disabled');
+    return true;
+  }
+
+  // Set measurement color
+  setColor(color) {
+    if (!this.measurer) {
+      console.warn('Measurer not initialized');
+      return false;
+    }
+
+    try {
+      this.measurer.color.setStyle(color);
+      console.log('Measurement color changed to:', color);
       return true;
     } catch (error) {
       console.error('Error setting measurement color:', error);
@@ -137,13 +121,13 @@ export class LengthMeasurementManager {
 
   // Clear all measurements
   clearAll() {
-    try {
-      if (!this.measurer || !this.measurer.list) {
-        console.warn('Measurer not ready');
-        return false;
-      }
+    if (!this.measurer) {
+      console.warn('Measurer not ready');
+      return false;
+    }
 
-      this.measurer.list.clear();
+    try {
+      this.measurer.deleteAll();
       console.log('All measurements cleared');
       return true;
     } catch (error) {
@@ -152,16 +136,15 @@ export class LengthMeasurementManager {
     }
   }
 
-  // Get measurement count
-  getCount() {
+  // Get measurements list
+  getMeasurements() {
+    if (!this.measurer) return [];
+
     try {
-      if (!this.measurer || !this.measurer.list) {
-        return 0;
-      }
-      return this.measurer.list.length || 0;
+      return Array.from(this.measurer.list.values());
     } catch (error) {
-      console.warn('Error getting measurement count:', error);
-      return 0;
+      console.warn('Could not get measurements:', error);
+      return [];
     }
   }
 
@@ -170,7 +153,7 @@ export class LengthMeasurementManager {
     return {
       ready: this.measurerReady,
       enabled: this.enabled,
-      count: this.getCount(),
+      count: this.getMeasurements().length,
     };
   }
 }

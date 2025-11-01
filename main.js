@@ -133,7 +133,7 @@ async function initApp() {
 
     // Initialize Length Measurement
     console.log('Initializing Length Measurement...');
-    const lengthMeasurement = new LengthMeasurementManager(components, world);
+    const lengthMeasurement = new LengthMeasurementManager(components, world, container);
     const lengthMeasurementReady = lengthMeasurement.init();
     console.log('Length Measurement ready:', lengthMeasurementReady);
 
