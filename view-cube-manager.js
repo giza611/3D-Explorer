@@ -80,25 +80,69 @@ export class ViewCubeManager {
 
     // Add manual click handler as fallback for cases where web component
     // internal click handlers don't work properly
+    // Use capture phase to intercept clicks before canvas/container captures them
     this.viewCube.addEventListener('click', (event) => {
-      console.log('ViewCube click detected, attempting to determine face...');
+      // Check if click is within ViewCube bounds
       const rect = this.viewCube.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
+      const isWithinBounds =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom;
 
-      // Estimate which face was clicked based on position
-      // The cube is 120x120, so divide it into regions
-      const clickFace = this.determineFaceFromClick(x, y, rect.width, rect.height);
+      if (isWithinBounds) {
+        console.log('ViewCube click detected, attempting to determine face...');
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
 
-      if (clickFace) {
-        console.log(`Determined face from click: ${clickFace}`);
-        // Dispatch the appropriate face event
-        const faceEvent = new CustomEvent(clickFace, { bubbles: true });
-        this.viewCube.dispatchEvent(faceEvent);
+        // Estimate which face was clicked based on position
+        // The cube is 120x120, so divide it into regions
+        const clickFace = this.determineFaceFromClick(x, y, rect.width, rect.height);
+
+        if (clickFace) {
+          console.log(`Determined face from click: ${clickFace}`);
+          // Prevent the event from propagating to other handlers (canvas, etc.)
+          event.stopPropagation();
+          event.preventDefault();
+
+          // Dispatch the appropriate face event
+          const faceEvent = new CustomEvent(clickFace, { bubbles: true });
+          this.viewCube.dispatchEvent(faceEvent);
+        }
       }
-    });
+    }, true); // Use capture phase to intercept early
 
-    console.log('ViewCube event listeners attached');
+    // Also add a document-level capture handler to ensure we catch clicks
+    // even if they're captured by other elements first
+    const handleDocumentClick = (event) => {
+      const rect = this.viewCube.getBoundingClientRect();
+      const isWithinBounds =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom;
+
+      if (isWithinBounds && event.target !== this.viewCube && !this.viewCube.contains(event.target)) {
+        console.log('Document-level capture: ViewCube click detected');
+        event.stopPropagation();
+        event.preventDefault();
+
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const clickFace = this.determineFaceFromClick(x, y, rect.width, rect.height);
+
+        if (clickFace) {
+          console.log(`Document capture determined face: ${clickFace}`);
+          const faceEvent = new CustomEvent(clickFace, { bubbles: true });
+          this.viewCube.dispatchEvent(faceEvent);
+        }
+      }
+    };
+
+    // Add document-level listener in capture phase
+    document.addEventListener('click', handleDocumentClick, true);
+
+    console.log('ViewCube event listeners attached (including capture phase)');
   }
 
   // Determine which face was clicked based on click coordinates
