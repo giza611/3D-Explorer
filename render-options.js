@@ -19,8 +19,10 @@ export class RenderOptionsManager {
       this.postproduction = this.world.renderer.postproduction;
 
       // Debug: Log available properties
+      const propKeys = Object.keys(this.postproduction || {});
       console.log('Postproduction object:', this.postproduction);
-      console.log('Postproduction properties:', Object.keys(this.postproduction || {}));
+      console.log('Postproduction properties:', propKeys);
+      console.log('Property names:', propKeys.join(', '));
 
       // Don't set enabled immediately - the base pass isn't initialized yet
       // The PostproductionRenderer needs to be fully set up before we can modify its properties
