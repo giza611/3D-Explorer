@@ -12,6 +12,7 @@ import { ItemsFinderManager } from './items-finder.js';
 import { FragmentsModelsManager } from './fragments-models.js';
 import { VisibilityManager } from './visibility-manager.js';
 import { GridsManager } from './grids-manager.js';
+import { HighlighterManager } from './highlighter-manager.js';
 
 console.log('Starting 3D Worlds App...');
 
@@ -186,6 +187,12 @@ async function initApp() {
     const gridsManagerReady = gridsManager.init();
     console.log('Grids Manager ready:', gridsManagerReady);
 
+    // Initialize Highlighter
+    console.log('Initializing Highlighter...');
+    const highlighter = new HighlighterManager(components, world);
+    const highlighterReady = highlighter.init();
+    console.log('Highlighter ready:', highlighterReady);
+
     // Initialize UI
     console.log('Initializing UI...');
     try {
@@ -258,9 +265,23 @@ async function initApp() {
 
           ${gridsManagerReady ? BUI.html`
             <bim-panel-section label="Grids">
-              <div id="grids-controls" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
-                <div style="color: #999; font-size: 12px;">📐 Reference grid for navigation</div>
-              </div>
+              <bim-checkbox
+                label="Enable Grid"
+                @change="${({ target }) => {
+                  console.log('Grid toggled:', target.checked);
+                  gridsManager.toggleGrid(target.checked);
+                }}">
+              </bim-checkbox>
+
+              <bim-color-input
+                label="Grid Color" color="#ffffff"
+                @input="${({ target }) => {
+                  console.log('Grid color changed:', target.color);
+                  gridsManager.setGridColor(target.color);
+                }}">
+              </bim-color-input>
+
+              <div style="color: #999; font-size: 12px;">📐 Reference grid for spatial navigation</div>
             </bim-panel-section>
           ` : BUI.html``}
 
@@ -326,6 +347,28 @@ async function initApp() {
               <bim-label>💡 Double-click on model to measure distances</bim-label>
               <bim-label>🗑️ Press Delete key to remove measurements</bim-label>
             `}
+          </bim-panel-section>
+
+          <bim-panel-section label="Highlighter">
+            <bim-color-input
+              label="Selection Color" color="#bcf124"
+              ?disabled="${!highlighterReady}"
+              @input="${({ target }) => {
+                console.log('Selection color changed:', target.color);
+                highlighter.setSelectionColor(target.color);
+              }}">
+            </bim-color-input>
+
+            <bim-button @click="${() => {
+              console.log('Clearing all highlights');
+              highlighter.clearAll();
+            }}"
+            ?disabled="${!highlighterReady}">
+              Clear All Highlights
+            </bim-button>
+
+            <bim-label>📍 Click on model elements to select and highlight them</bim-label>
+            <bim-label>⌃ Hold Ctrl + Click for multi-selection</bim-label>
           </bim-panel-section>
 
           <bim-panel-section label="Controls">
