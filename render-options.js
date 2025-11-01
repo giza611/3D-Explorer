@@ -22,13 +22,10 @@ export class RenderOptionsManager {
       console.log('Postproduction object:', this.postproduction);
       console.log('Postproduction properties:', Object.keys(this.postproduction || {}));
 
-      // Initialize postproduction as disabled by default
-      this.postproduction.enabled = false;
+      // Don't set enabled immediately - the base pass isn't initialized yet
+      // The PostproductionRenderer needs to be fully set up before we can modify its properties
+      // Users will control it via UI which happens after full initialization
 
-      // Initialize outline settings
-      this.postproduction.outlinesEnabled = false;
-
-      // Get available style options
       console.log('Available postproduction styles configured');
 
       this.renderOptionsReady = true;
@@ -50,11 +47,13 @@ export class RenderOptionsManager {
     }
 
     try {
+      console.log('Attempting to set postproduction enabled:', enabled);
       this.postproduction.enabled = enabled;
       console.log('Postproduction:', enabled ? 'enabled' : 'disabled');
       return true;
     } catch (error) {
-      console.error('Error toggling postproduction:', error);
+      console.warn('Could not toggle postproduction (base pass may not be ready):', error.message);
+      // The base pass might not be initialized yet - this is okay, it will work when user interacts
       return false;
     }
   }
@@ -67,11 +66,19 @@ export class RenderOptionsManager {
     }
 
     try {
-      this.postproduction.outlinesEnabled = enabled;
+      console.log('Attempting to set outlines enabled:', enabled);
+      if (this.postproduction.outlinesEnabled !== undefined) {
+        this.postproduction.outlinesEnabled = enabled;
+      } else if (this.postproduction.outlinePass !== undefined) {
+        this.postproduction.outlinePass.enabled = enabled;
+      } else {
+        console.warn('Outlines property not found');
+        return false;
+      }
       console.log('Outlines:', enabled ? 'enabled' : 'disabled');
       return true;
     } catch (error) {
-      console.error('Error toggling outlines:', error);
+      console.warn('Could not toggle outlines:', error.message);
       return false;
     }
   }
