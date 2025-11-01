@@ -449,7 +449,12 @@ async function initApp() {
                 console.log('Postproduction style changed:', style);
                 renderOptions.setStyle(style);
               }}">
-              ${renderOptions.getAvailableStyles().map(style => `<bim-option label="${style.label}" value="${style.value}"></bim-option>`).join('')}
+              <bim-option label="Basic" value="COLOR"></bim-option>
+              <bim-option label="Pen" value="NORMAL"></bim-option>
+              <bim-option label="Shadowed Pen" value="DEPTH"></bim-option>
+              <bim-option label="Color Pen" value="COLOR_NORMAL"></bim-option>
+              <bim-option label="Color Shadows" value="COLOR_DEPTH"></bim-option>
+              <bim-option label="Color Pen Shadows" value="COLOR_NORMAL_DEPTH"></bim-option>
             </bim-dropdown>
 
             <bim-number-input
@@ -2023,69 +2028,7 @@ async function initApp() {
     // Setup Grids Controls
     if (gridsManagerReady) {
       console.log('Setting up Grids UI controls...');
-      const setupGridsControls = () => {
-        try {
-          const controlsContainer = document.getElementById('grids-controls');
-          console.log('Grids controls container found:', !!controlsContainer);
-          if (!controlsContainer) {
-            console.warn('Grids controls container not found, retrying...');
-            setTimeout(setupGridsControls, 200);
-            return;
-          }
-
-          controlsContainer.innerHTML = '';
-
-          // Create toggle button
-          const toggleBtn = document.createElement('button');
-          toggleBtn.textContent = '⭕ Grids Disabled';
-          toggleBtn.style.cssText = `
-            width: 100%;
-            padding: 8px 12px;
-            background: #95a5a6;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-bottom: 8px;
-            transition: all 0.3s ease;
-          `;
-
-          const updateButtonState = () => {
-            const isEnabled = gridsManager.isEnabled();
-            if (isEnabled) {
-              toggleBtn.textContent = '✅ Grids Enabled';
-              toggleBtn.style.background = '#27ae60';
-            } else {
-              toggleBtn.textContent = '⭕ Grids Disabled';
-              toggleBtn.style.background = '#95a5a6';
-            }
-          };
-
-          toggleBtn.onclick = () => {
-            const isEnabled = gridsManager.isEnabled();
-            const success = gridsManager.toggleGrid(!isEnabled);
-            if (success) {
-              updateButtonState();
-            } else {
-              alert('Failed to toggle grid');
-            }
-          };
-
-          controlsContainer.appendChild(toggleBtn);
-
-          // Create info label
-          const infoLabel = document.createElement('div');
-          infoLabel.style.cssText = 'color: #999; font-size: 11px; margin-top: 8px; line-height: 1.4;';
-          infoLabel.textContent = '💡 Grids provide visual reference points for navigation in your 3D scene. Click the button to toggle on/off.';
-          controlsContainer.appendChild(infoLabel);
-
-          console.log('Grids UI controls created successfully');
-        } catch (error) {
-          console.error('Error creating Grids UI controls:', error);
-        }
-      };
-      setupGridsControls();
+      // Grids controls are now handled by BUI components in the panel template
     }
 
     // Settings button removed - panel is now always visible
