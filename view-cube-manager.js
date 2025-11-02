@@ -207,31 +207,66 @@ export class ViewCubeManager {
 
   // Determine which face was clicked based on click coordinates
   determineFaceFromClick(clickX, clickY, width, height) {
-    // Simple heuristic: divide cube into regions
-    // This is a basic implementation that might need refinement
+    // Map 2D ViewCube clicks to 6 cube faces
+    // Strategy: Divide into regions based on proximity to edges and center
 
     const centerX = width / 2;
     const centerY = height / 2;
-    const threshold = width * 0.25; // 25% from center is a threshold
 
+    // Calculate distances from center
     const dx = clickX - centerX;
     const dy = clickY - centerY;
 
-    // Determine dominant direction
+    // Use 30% threshold for edge regions
+    const edgeThreshold = width * 0.3;
+
+    // Determine if we're in an edge region or center
+    const isTopEdge = clickY < edgeThreshold;
+    const isBottomEdge = clickY > (height - edgeThreshold);
+    const isLeftEdge = clickX < edgeThreshold;
+    const isRightEdge = clickX > (width - edgeThreshold);
+
+    // Priority order: corners and edges first, then center regions
+
+    // Top edge takes priority
+    if (isTopEdge && !isLeftEdge && !isRightEdge) {
+      return 'top';
+    }
+
+    // Bottom edge takes priority
+    if (isBottomEdge && !isLeftEdge && !isRightEdge) {
+      return 'bottom';
+    }
+
+    // Left edge
+    if (isLeftEdge && !isTopEdge && !isBottomEdge) {
+      return 'left';
+    }
+
+    // Right edge
+    if (isRightEdge && !isTopEdge && !isBottomEdge) {
+      return 'right';
+    }
+
+    // Corners: map to back view (since back face isn't directly visible)
+    if ((isTopEdge && isLeftEdge) || (isTopEdge && isRightEdge) ||
+        (isBottomEdge && isLeftEdge) || (isBottomEdge && isRightEdge)) {
+      return 'back';
+    }
+
+    // Center region - determine based on which direction is dominant
     const absDx = Math.abs(dx);
     const absDy = Math.abs(dy);
 
     if (absDx > absDy) {
-      // Left or right face
+      // Horizontal dominance
       return dx < 0 ? 'left' : 'right';
+    } else if (absDy > width * 0.1) {
+      // Vertical dominance (with small deadzone)
+      return dy < 0 ? 'top' : 'bottom';
     } else {
-      // Top or bottom face (or front if too centered)
-      if (absDy > threshold) {
-        return dy < 0 ? 'top' : 'bottom';
-      } else {
-        // Default to front if click is more centered
-        return 'front';
-      }
+      // Very center - front face
+      return 'front';
     }
   }
 
