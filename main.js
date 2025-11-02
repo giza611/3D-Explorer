@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import Stats from 'stats.js';
 import * as BUI from '@thatopen/ui';
 import * as OBC from '@thatopen/components';
+import * as OBCF from '@thatopen/components-front';
 import * as CUI from '@thatopen/ui-obc';
 import { AreaMeasurementManager } from './area-measurement.js';
 import { LengthMeasurementManager } from './length-measurement.js';
@@ -34,15 +35,48 @@ async function initApp() {
     console.log('World created');
 
     world.scene = new OBC.SimpleScene(components);
-    world.renderer = new OBC.SimpleRenderer(components, container);
+    world.renderer = new OBCF.PostproductionRenderer(components, container);
     world.camera = new OBC.OrthoPerspectiveCamera(components);
-    console.log('Scene (SimpleScene), Renderer, OrthoPerspectiveCamera created');
+    console.log('Scene (SimpleScene), PostproductionRenderer, OrthoPerspectiveCamera created');
 
     components.init();
     console.log('Components initialized');
 
     world.scene.setup();
     console.log('Scene setup complete');
+
+    // Enable and configure postproduction AFTER scene setup
+    try {
+      world.renderer.postproduction.enabled = true;
+
+      // Configure ambient occlusion with visible defaults
+      const { aoPass, edgesPass, outlinePass } = world.renderer.postproduction;
+
+      // Set AO parameters
+      aoPass.blendIntensity = 1; // Start with subtle effect
+      const aoParams = {
+        radius: 0.25,
+        distanceExponent: 1,
+        thickness: 1,
+        scale: 1,
+        samples: 16,
+        distanceFallOff: 1,
+        screenSpaceRadius: true,
+      };
+      aoPass.updateGtaoMaterial(aoParams);
+
+      // Edges disabled by default (user can enable)
+      edgesPass.visible = false;
+      edgesPass.width = 1;
+      edgesPass.color.set(0x000000);
+
+      // Update postproduction camera for orthoperspective
+      world.renderer.postproduction.updateCamera();
+
+      console.log('Postproduction enabled and configured');
+    } catch (error) {
+      console.warn('Could not configure postproduction:', error);
+    }
 
     world.scene.three.background = null;
 
@@ -396,7 +430,162 @@ async function initApp() {
             </bim-panel-section>
           ` : BUI.html``}
 
-          <bim-panel-section label="Controls">
+          <bim-panel-section label="Postproduction">
+            <bim-checkbox
+              label="Enable Postproduction"
+              checked
+              @change="${({ target }) => {
+                console.log('Postproduction toggled:', target.checked);
+                world.renderer.postproduction.enabled = target.checked;
+              }}">
+            </bim-checkbox>
+
+            <bim-label label="Rendering Style"></bim-label>
+            <select id="postproduction-style" style="width: 100%; padding: 8px; margin: 8px 0; border-radius: 4px; border: 1px solid #ccc; background: white; cursor: pointer;"
+              @change="${({ target }) => {
+                const styleMap = {
+                  'COLOR': OBCF.PostproductionAspect.COLOR,
+                  'PEN': OBCF.PostproductionAspect.PEN,
+                  'PEN_SHADOWS': OBCF.PostproductionAspect.PEN_SHADOWS,
+                  'COLOR_PEN': OBCF.PostproductionAspect.COLOR_PEN,
+                  'COLOR_SHADOWS': OBCF.PostproductionAspect.COLOR_SHADOWS,
+                  'COLOR_PEN_SHADOWS': OBCF.PostproductionAspect.COLOR_PEN_SHADOWS
+                };
+                world.renderer.postproduction.style = styleMap[target.value];
+                console.log('Postproduction style changed to:', target.value);
+              }}">
+              <option value="COLOR">Color (Default)</option>
+              <option value="PEN">Pen (Black & White)</option>
+              <option value="PEN_SHADOWS">Pen with Shadows</option>
+              <option value="COLOR_PEN">Color + Pen</option>
+              <option value="COLOR_SHADOWS">Color with Shadows</option>
+              <option value="COLOR_PEN_SHADOWS">Color + Pen + Shadows</option>
+            </select>
+          </bim-panel-section>
+
+          <bim-panel-section label="Ambient Occlusion (AO)">
+            <bim-number-input
+              slider step="0.1" label="AO Blend Intensity" value="1" min="0" max="5"
+              @change="${({ target }) => {
+                const { aoPass } = world.renderer.postproduction;
+                aoPass.blendIntensity = target.value;
+                console.log('AO Blend Intensity:', target.value);
+              }}">
+            </bim-number-input>
+
+            <bim-number-input
+              slider step="0.01" label="AO Radius" value="0.25" min="0" max="1"
+              @change="${({ target }) => {
+                const { aoPass } = world.renderer.postproduction;
+                const params = {
+                  radius: target.value,
+                  distanceExponent: 1,
+                  thickness: 1,
+                  scale: 1,
+                  samples: 16,
+                  distanceFallOff: 1,
+                  screenSpaceRadius: true,
+                };
+                aoPass.updateGtaoMaterial(params);
+                console.log('AO Radius:', target.value);
+              }}">
+            </bim-number-input>
+
+            <bim-number-input
+              slider step="1" label="AO Samples" value="16" min="0" max="32"
+              @change="${({ target }) => {
+                const { aoPass } = world.renderer.postproduction;
+                const params = {
+                  radius: 0.25,
+                  distanceExponent: 1,
+                  thickness: 1,
+                  scale: 1,
+                  samples: Math.floor(target.value),
+                  distanceFallOff: 1,
+                  screenSpaceRadius: true,
+                };
+                aoPass.updateGtaoMaterial(params);
+                console.log('AO Samples:', target.value);
+              }}">
+            </bim-number-input>
+          </bim-panel-section>
+
+          <bim-panel-section label="Edges">
+            <bim-checkbox
+              label="Show Edges"
+              @change="${({ target }) => {
+                const { edgesPass } = world.renderer.postproduction;
+                edgesPass.visible = target.checked;
+                console.log('Edges visible:', target.checked);
+              }}">
+            </bim-checkbox>
+
+            <bim-number-input
+              slider step="0.1" label="Edge Width" value="1" min="0" max="10"
+              @change="${({ target }) => {
+                const { edgesPass } = world.renderer.postproduction;
+                edgesPass.width = target.value;
+                console.log('Edge Width:', target.value);
+              }}">
+            </bim-number-input>
+
+            <bim-color-input
+              label="Edge Color" color="#000000"
+              @input="${({ target }) => {
+                const { edgesPass } = world.renderer.postproduction;
+                edgesPass.color.set(target.color);
+                console.log('Edge Color:', target.color);
+              }}">
+            </bim-color-input>
+          </bim-panel-section>
+
+          <bim-panel-section label="Outlines">
+            <bim-checkbox
+              label="Enable Outlines"
+              @change="${({ target }) => {
+                world.renderer.postproduction.outlinesEnabled = target.checked;
+                console.log('Outlines enabled:', target.checked);
+              }}">
+            </bim-checkbox>
+
+            <bim-number-input
+              slider step="0.1" label="Outline Thickness" value="1" min="0" max="10"
+              @change="${({ target }) => {
+                const { outlinePass } = world.renderer.postproduction;
+                outlinePass.thickness = target.value;
+                console.log('Outline Thickness:', target.value);
+              }}">
+            </bim-number-input>
+
+            <bim-number-input
+              slider step="0.01" label="Fill Opacity" value="0.5" min="0" max="1"
+              @change="${({ target }) => {
+                const { outlinePass } = world.renderer.postproduction;
+                outlinePass.fillOpacity = target.value;
+                console.log('Fill Opacity:', target.value);
+              }}">
+            </bim-number-input>
+
+            <bim-color-input
+              label="Outline Color" color="#00ff00"
+              @input="${({ target }) => {
+                const { outlinePass } = world.renderer.postproduction;
+                outlinePass.outlineColor.set(target.color);
+                console.log('Outline Color:', target.color);
+              }}">
+            </bim-color-input>
+
+            <bim-color-input
+              label="Fill Color" color="#00ff00"
+              @input="${({ target }) => {
+                const { outlinePass } = world.renderer.postproduction;
+                outlinePass.fillColor.set(target.color);
+                console.log('Fill Color:', target.color);
+              }}">
+            </bim-color-input>
+          </bim-panel-section>
+
+          <bim-panel-section label="Scene Controls">
             <bim-color-input
               label="Background Color" color="#202932"
               @input="${({ target }) => {
