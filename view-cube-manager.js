@@ -263,24 +263,29 @@ export class ViewCubeManager {
 
       // Get bounding box to calculate distance
       const bbox = this.getBoundingBox();
+
+      let distance, center;
+
       if (!bbox) {
-        console.warn('Could not calculate bounding box for view');
-        return false;
+        // No model loaded - use default distance and origin
+        console.log('No model loaded, using default camera distance');
+        distance = 20; // Default distance when no model is present
+        center = { x: 0, y: 0, z: 0 }; // Origin point
+      } else {
+        // Calculate camera distance based on model size
+        const size = Math.max(
+          bbox.max.x - bbox.min.x,
+          bbox.max.y - bbox.min.y,
+          bbox.max.z - bbox.min.z
+        );
+        distance = size / 2 / Math.tan(Math.PI / 6); // 30 degree FOV
+
+        center = {
+          x: (bbox.min.x + bbox.max.x) / 2,
+          y: (bbox.min.y + bbox.max.y) / 2,
+          z: (bbox.min.z + bbox.max.z) / 2,
+        };
       }
-
-      // Calculate camera distance based on model size
-      const size = Math.max(
-        bbox.max.x - bbox.min.x,
-        bbox.max.y - bbox.min.y,
-        bbox.max.z - bbox.min.z
-      );
-      const distance = size / 2 / Math.tan(Math.PI / 6); // 30 degree FOV
-
-      const center = {
-        x: (bbox.min.x + bbox.max.x) / 2,
-        y: (bbox.min.y + bbox.max.y) / 2,
-        z: (bbox.min.z + bbox.max.z) / 2,
-      };
 
       // Calculate camera position
       const camX = center.x + config.x * distance;
