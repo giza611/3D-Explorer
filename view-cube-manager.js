@@ -377,22 +377,30 @@ export class ViewCubeManager {
       // Traverse scene to find all geometries
       this.world.scene.three.traverse((object) => {
         if (object.geometry) {
-          object.geometry.computeBoundingBox();
-          const box = object.geometry.boundingBox;
+          try {
+            // Only compute bounding box if geometry has position attribute
+            if (object.geometry.attributes && object.geometry.attributes.position) {
+              object.geometry.computeBoundingBox();
+              const box = object.geometry.boundingBox;
 
-          if (box) {
-            // Transform by object's world matrix
-            const worldPos = new THREE.Vector3();
-            object.getWorldPosition(worldPos);
+              if (box) {
+                // Transform by object's world matrix
+                const worldPos = new THREE.Vector3();
+                object.getWorldPosition(worldPos);
 
-            bbox.min.x = Math.min(bbox.min.x, worldPos.x + box.min.x);
-            bbox.min.y = Math.min(bbox.min.y, worldPos.y + box.min.y);
-            bbox.min.z = Math.min(bbox.min.z, worldPos.z + box.min.z);
-            bbox.max.x = Math.max(bbox.max.x, worldPos.x + box.max.x);
-            bbox.max.y = Math.max(bbox.max.y, worldPos.y + box.max.y);
-            bbox.max.z = Math.max(bbox.max.z, worldPos.z + box.max.z);
+                bbox.min.x = Math.min(bbox.min.x, worldPos.x + box.min.x);
+                bbox.min.y = Math.min(bbox.min.y, worldPos.y + box.min.y);
+                bbox.min.z = Math.min(bbox.min.z, worldPos.z + box.min.z);
+                bbox.max.x = Math.max(bbox.max.x, worldPos.x + box.max.x);
+                bbox.max.y = Math.max(bbox.max.y, worldPos.y + box.max.y);
+                bbox.max.z = Math.max(bbox.max.z, worldPos.z + box.max.z);
 
-            hasObjects = true;
+                hasObjects = true;
+              }
+            }
+          } catch (err) {
+            // Silently skip objects with invalid geometries
+            // This is expected for UI elements and empty geometries
           }
         }
       });
@@ -407,7 +415,7 @@ export class ViewCubeManager {
 
       return bbox;
     } catch (error) {
-      console.error('Error calculating bounding box:', error);
+      // Silently return null - this is expected when scene has no valid geometries
       return null;
     }
   }
