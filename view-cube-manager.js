@@ -280,80 +280,33 @@ export class ViewCubeManager {
     try {
       console.log(`Navigating to ${viewName} view`);
 
-      // Define camera positions for each view
-      const viewConfigs = {
-        front: { x: 0, y: 0, z: 1, lookX: 0, lookY: 0, lookZ: 0 },
-        back: { x: 0, y: 0, z: -1, lookX: 0, lookY: 0, lookZ: 0 },
-        left: { x: -1, y: 0, z: 0, lookX: 0, lookY: 0, lookZ: 0 },
-        right: { x: 1, y: 0, z: 0, lookX: 0, lookY: 0, lookZ: 0 },
-        top: { x: 0, y: 1, z: 0, lookX: 0, lookY: 0, lookZ: 0 },
-        bottom: { x: 0, y: -1, z: 0, lookX: 0, lookY: 0, lookZ: 0 },
+      // Map ViewCube face names to camera orientation codes
+      // This uses the same logic as the orientation buttons in Camera Controls
+      const orientationMap = {
+        front: 'f',
+        back: 'b',
+        left: 'l',
+        right: 'r',
+        top: 't',
+        bottom: 'd', // 'd' for down/bottom
       };
 
-      const config = viewConfigs[viewName];
-      if (!config) {
+      const orientationCode = orientationMap[viewName];
+      if (!orientationCode) {
         console.warn(`Unknown view: ${viewName}`);
         return false;
       }
 
-      // Get bounding box to calculate distance
-      const bbox = this.getBoundingBox();
+      // Use the same setOrientation method as the Camera Controls buttons
+      const success = await this.cameraControls.setOrientation(orientationCode);
 
-      let distance, center;
-
-      if (!bbox) {
-        // No model loaded - use default distance and origin
-        console.log('No model loaded, using default camera distance');
-        distance = 20; // Default distance when no model is present
-        center = { x: 0, y: 0, z: 0 }; // Origin point
+      if (success) {
+        console.log(`${viewName} view applied via orientation: ${orientationCode}`);
       } else {
-        // Calculate camera distance based on model size
-        const size = Math.max(
-          bbox.max.x - bbox.min.x,
-          bbox.max.y - bbox.min.y,
-          bbox.max.z - bbox.min.z
-        );
-        distance = size / 2 / Math.tan(Math.PI / 6); // 30 degree FOV
-
-        center = {
-          x: (bbox.min.x + bbox.max.x) / 2,
-          y: (bbox.min.y + bbox.max.y) / 2,
-          z: (bbox.min.z + bbox.max.z) / 2,
-        };
+        console.warn(`Failed to set ${viewName} view`);
       }
 
-      // Calculate camera position
-      const camX = center.x + config.x * distance;
-      const camY = center.y + config.y * distance;
-      const camZ = center.z + config.z * distance;
-
-      // Use camera controls to set position
-      if (this.world.camera.controls && this.world.camera.controls.setLookAt) {
-        // Use direct camera positioning with animation
-        console.log(`Setting camera for ${viewName} view: [${camX}, ${camY}, ${camZ}] -> [${center.x}, ${center.y}, ${center.z}]`);
-        await this.world.camera.controls.setLookAt(
-          camX,
-          camY,
-          camZ,
-          center.x,
-          center.y,
-          center.z,
-          true // Enable animation
-        );
-        console.log(`${viewName} view applied`);
-      } else if (
-        this.cameraControls.fitToAll &&
-        typeof this.cameraControls.fitToAll === 'function'
-      ) {
-        // Fallback to fitToAll if setLookAt not available
-        console.log(`Using fitToAll for ${viewName} view`);
-        await this.cameraControls.fitToAll(this.world.scene.three);
-        console.log(`${viewName} view applied`);
-      } else {
-        console.warn(`Camera controls not available for ${viewName} view`);
-      }
-
-      return true;
+      return success;
     } catch (error) {
       console.error(`Error navigating to ${viewName} view:`, error);
       return false;
